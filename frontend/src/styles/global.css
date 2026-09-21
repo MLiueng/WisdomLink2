@@ -1,0 +1,95 @@
+/* 全局样式（WL2-DOC-004 §1 视觉基调 / §10 走查清单） */
+* { box-sizing: border-box; }
+/* 满屏应用布局：body 永不滚动，所有滚动收敛到各页面的内部容器（局部滚动） */
+html, body, #app { height: 100%; margin: 0; overflow: hidden; }
+body {
+  font-family: -apple-system, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  font-size: var(--wl-fs-md);
+  color: var(--wl-text-primary);
+  background: var(--wl-bg);
+  -webkit-font-smoothing: antialiased;
+}
+a { color: var(--wl-primary); text-decoration: none; }
+
+/* 卡片基底 */
+.wl-card {
+  background: var(--wl-card);
+  border: 1px solid var(--wl-border);
+  border-radius: var(--wl-r-md);
+  box-shadow: var(--wl-shadow-sm);
+  transition: box-shadow var(--wl-t-fast), transform var(--wl-t-fast);
+}
+.wl-card.is-hover:hover { box-shadow: var(--wl-shadow-md); transform: translateY(-1px); }
+
+/* 页面通用 */
+.wl-page { padding: var(--wl-sp-6); max-width: 1440px; margin: 0 auto; }
+.wl-page-title { font-size: var(--wl-fs-xl); font-weight: 600; margin: 0 0 var(--wl-sp-2); }
+.wl-page-desc { font-size: var(--wl-fs-sm); color: var(--wl-text-muted); margin: 0 0 var(--wl-sp-5); }
+/* 页头响应式：窄视口下操作区换行，标题块不被 flex 压缩成竖排（中文 min-content 为单字宽） */
+.page-head { flex-wrap: wrap; gap: 8px 16px; }
+.page-head > div:first-child { flex: 1 1 320px; min-width: 0; }
+.page-head > div:last-child { flex-shrink: 0; margin-left: auto; flex-wrap: wrap; max-width: 100%; }
+/* 工具条窄视口适配（换行）；双栏栅格的响应式在各组件 scoped 内定义（scoped 优先级高于全局） */
+.tools, .doc-toolbar { flex-wrap: wrap; }
+
+/* 空状态 */
+.wl-empty { text-align: center; padding: 48px 0; color: var(--wl-text-muted); }
+.wl-empty .el-icon { font-size: 40px; margin-bottom: var(--wl-sp-3); color: var(--wl-gray-300); }
+.wl-empty p { font-size: var(--wl-fs-sm); margin: 0 0 var(--wl-sp-4); }
+
+/* 状态徽章（§7.4 全局唯一真值） */
+.wl-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: var(--wl-fs-xs); line-height: 1; padding: 4px 8px;
+  border-radius: var(--wl-r-full); border: 1px solid transparent; white-space: nowrap;
+}
+.wl-badge .dot { width: 6px; height: 6px; border-radius: 50%; }
+.wl-badge--info { color: var(--wl-info); background: #e8f6fd; border-color: #bae6fd; }
+.wl-badge--cleaning { color: var(--wl-cyan); background: #e6fafd; border-color: #a5e8f3; }
+.wl-badge--indexing { color: var(--wl-purple); background: #f3e8ff; border-color: #ddd0fe; }
+.wl-badge--success { color: var(--wl-success); background: #e9f9ef; border-color: #b7e6c6; }
+.wl-badge--danger { color: var(--wl-danger); background: #fdeaea; border-color: #f5bcbc; }
+.wl-badge--warning { color: var(--wl-warning); background: #fdf3e7; border-color: #f5d7ab; }
+.wl-badge--muted { color: var(--wl-text-muted); background: var(--wl-gray-100); border-color: var(--wl-gray-200); }
+
+@keyframes wl-spin { to { transform: rotate(360deg); } }
+.wl-badge .spin { animation: wl-spin 1s linear infinite; }
+
+/* 打字光标 */
+@keyframes wl-cursor { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+.wl-cursor::after {
+  content: '▍'; color: var(--wl-primary); margin-left: 2px;
+  animation: wl-cursor 500ms step-end infinite;
+}
+
+/* 骨架屏波纹 */
+.wl-skeleton { background: linear-gradient(90deg, var(--wl-gray-100) 25%, var(--wl-gray-200) 50%, var(--wl-gray-100) 75%); background-size: 200% 100%; animation: wl-wave 1.2s infinite; border-radius: var(--wl-r-sm); }
+@keyframes wl-wave { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+/* Markdown 回答排版 */
+.wl-md { font-size: var(--wl-fs-md); line-height: 1.75; color: var(--wl-text-primary); word-break: break-word; }
+.wl-md p { margin: 0 0 var(--wl-sp-3); }
+.wl-md ul, .wl-md ol { margin: 0 0 var(--wl-sp-3); padding-left: 20px; }
+.wl-md code { background: var(--wl-gray-100); padding: 1px 6px; border-radius: 4px; font-family: 'JetBrains Mono', Consolas, monospace; font-size: var(--wl-fs-sm); }
+.wl-md pre { background: var(--wl-gray-900); color: #e5e7eb; padding: var(--wl-sp-4); border-radius: var(--wl-r-md); overflow: auto; }
+.wl-md table { border-collapse: collapse; margin: var(--wl-sp-3) 0; }
+.wl-md th, .wl-md td { border: 1px solid var(--wl-border); padding: 6px 12px; font-size: var(--wl-fs-sm); }
+
+/* 引用角标 */
+.wl-cite {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 16px; height: 16px; padding: 0 4px; margin: 0 2px;
+  font-size: var(--wl-fs-xs); color: var(--wl-primary);
+  background: var(--wl-primary-light); border-radius: 4px;
+  cursor: pointer; vertical-align: super; line-height: 1;
+  transition: background var(--wl-t-fast);
+}
+.wl-cite:hover { background: var(--wl-primary-30); }
+
+/* 滚动条 */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-thumb { background: var(--wl-gray-300); border-radius: 3px; }
+::-webkit-scrollbar-track { background: transparent; }
+
+/* 焦点环（无障碍 §10.1） */
+:focus-visible { outline: 2px solid var(--wl-primary); outline-offset: 2px; }

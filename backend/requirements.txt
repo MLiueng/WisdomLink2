@@ -1,0 +1,50 @@
+# --- Core framework ---
+# 版本策略（用户要求 2026-09-12）：全部锁定精确版本，避免上游升级引入不兼容。
+# 升级流程：先在独立环境验证 → 调整本文件 → 全量回归（pytest + tests/live_smoke.py）。
+fastapi==0.141.1
+uvicorn==0.52.4
+pydantic==2.13.5
+pydantic-settings==2.15.0
+sqlalchemy==2.0.52
+pymysql==1.2.0
+cryptography==50.0.1
+# Async DB drivers (P-13 hot-path AsyncSession): sqlite default / MySQL
+aiosqlite==0.22.1
+aiomysql==0.3.2
+redis==8.1.0
+httpx==0.28.1
+python-multipart==0.0.32
+pyjwt==2.14.0
+
+# --- Parsing / cleaning / chunking ---
+pypdf==6.18.1
+python-docx==1.2.0
+openpyxl==3.1.5
+jieba==0.42.1
+rank-bm25==0.2.2
+
+# --- Orchestration (LangChain / LangGraph) ---
+langgraph==1.2.11
+langchain-core==1.6.3
+networkx==3.6.1
+
+# --- Vector store (qdrant default; faiss for local dev) ---
+qdrant-client==1.19.0
+# faiss-cpu==1.9.0        # optional: local dev vector store (set WL2_VECTOR_DRIVER=faiss needs no faiss lib)
+
+# --- Local rerank via ONNX (required when WL2_RERANK_ACTIVE=local) ---
+onnxruntime==1.30.0
+transformers==5.17.0
+numpy==2.5.3
+
+# --- Testing ---
+python-pptx==1.0.2
+Pillow==12.2.0
+pytest==9.1.1
+
+# --- Optional (production / extensions, enable as needed and pin after install) ---
+# celery>=5.4             # task queue (default: built-in thread pool runner)
+# boto3>=1.34             # S3/MinIO object storage
+pymilvus==3.0.1
+# elasticsearch>=8.14     # ES adapter
+# sentence-transformers>=3.0  # HF-format local rerank (ONNX route does not need it)

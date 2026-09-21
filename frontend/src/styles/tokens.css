@@ -1,0 +1,74 @@
+/**
+ * 设计 Token（WL2-DOC-004 §8）：色板/字号/间距/圆角/阴影/动效。
+ * 全部页面与组件仅允许引用本文件变量，保证一致性（美观度走查 L2 门槛）。
+ */
+:root {
+  /* 主色（B-F1：品牌色可一键替换） */
+  --wl-primary: #2563eb;
+  --wl-primary-hover: #1d4ed8;
+  --wl-primary-light: #eff4ff;
+  --wl-primary-60: rgba(37, 99, 235, 0.6);
+  --wl-primary-30: rgba(37, 99, 235, 0.3);
+
+  /* 语义色（仅状态使用，§7.4） */
+  --wl-success: #16a34a;
+  --wl-warning: #d97706;
+  --wl-danger: #dc2626;
+  --wl-info: #0ea5e9;
+  --wl-cyan: #0891b2;
+  --wl-purple: #7c3aed;
+
+  /* 灰阶 */
+  --wl-gray-50: #f9fafb;
+  --wl-gray-100: #f3f4f6;
+  --wl-gray-200: #e5e7eb;
+  --wl-gray-300: #d1d5db;
+  --wl-gray-400: #9ca3af;
+  --wl-gray-500: #6b7280;
+  --wl-gray-700: #4b5563;
+  --wl-gray-900: #111827;
+
+  /* 文本三级层级 */
+  --wl-text-primary: #1f2937;
+  --wl-text-secondary: #4b5563;
+  --wl-text-muted: #9ca3af;
+
+  /* 背景基底 */
+  --wl-bg: #f5f7fa;
+  --wl-card: #ffffff;
+  --wl-border: #e5e7eb;
+
+  /* 字号（§8.2） */
+  --wl-fs-xs: 12px;
+  --wl-fs-sm: 13px;
+  --wl-fs-md: 14px;
+  --wl-fs-lg: 16px;
+  --wl-fs-xl: 20px;
+  --wl-fs-num: 24px;
+
+  /* 间距（4px 网格，§8.3） */
+  --wl-sp-1: 4px;  --wl-sp-2: 8px;  --wl-sp-3: 12px;
+  --wl-sp-4: 16px; --wl-sp-5: 20px; --wl-sp-6: 24px; --wl-sp-8: 32px;
+
+  /* 圆角 / 阴影（§8.4） */
+  --wl-r-sm: 6px;
+  --wl-r-md: 8px;
+  --wl-r-full: 999px;
+  --wl-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --wl-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+
+  /* 布局尺寸（§8.3） */
+  --wl-sidebar-w: 240px;
+  --wl-sidebar-w-mini: 64px;
+  --wl-topbar-h: 56px;
+
+  /* 动效 */
+  --wl-t-fast: 150ms ease-out;
+  --wl-t-slow: 250ms ease-out;
+
+  /* Element Plus 主题对齐 */
+  --el-color-primary: #2563eb;
+  --el-color-primary-light-9: #eff4ff;
+  --el-border-radius-base: 6px;
+  --el-font-size-base: 14px;
+}
