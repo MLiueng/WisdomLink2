@@ -79,6 +79,15 @@ async def lifespan(app: FastAPI):
     _ensure_columns()
     _ensure_indexes()
     cfg = get_settings()
+    # S-01 加固：弱密钥只在签发时拦截不够——require_admin 的 decode 侧不校验，
+    # 默认密钥部署时攻击者可自签 admin JWT。非 dev 环境弱密钥直接拒绝启动。
+    from app.core.security import secret_strength_ok
+    if not secret_strength_ok(cfg.secret):
+        msg = ("WL2_SECRET 为默认值/占位符或短于 32 位——非 dev 环境拒绝启动；"
+               "请生成随机密钥（如 python -c \"import secrets;print(secrets.token_hex(32))\"）写入 .env 后重启")
+        if cfg.env != "dev":
+            raise RuntimeError(msg)
+        log.warning("【安全警告】%s", msg)
     import sys
     log.info("启动 | python=%s | profile=%s | llm=%s@%s | emb=%s | rerank=%s path=%s | vector=%s | db=%s",
              sys.executable, cfg.profile, cfg.llm_active, cfg.llm_remote_base_url or cfg.llm_local_base_url or "-",

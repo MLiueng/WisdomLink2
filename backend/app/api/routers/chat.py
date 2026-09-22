@@ -9,6 +9,7 @@ from sqlalchemy import select, func
 from app.core.logging_config import setup_logging, new_trace_id
 from app.core.metering import audit
 from app.core.rate_limit import require_chat_rate
+from app.core.security import require_admin
 log = setup_logging()
 from app.db import AsyncSessionLocal, SessionLocal
 from app.engine import qa_engine
@@ -102,7 +103,8 @@ def search_sessions(q: str, limit: int = 20):
         db.close()
 
 
-@router.post("/sessions/{sid}/pin", summary="置顶/取消置顶会话")
+@router.post("/sessions/{sid}/pin", dependencies=[Depends(require_admin)],
+             summary="置顶/取消置顶会话（写操作，需管理员 JWT——NFR-219 边界）")
 def pin_session(sid: str):
     pinned = _pinned_ids()
     if sid in pinned:
@@ -148,7 +150,8 @@ def feedback_list(value: str = "down"):
         db.close()
 
 
-@router.delete("/sessions/{sid}", summary="删除会话及其消息",)
+@router.delete("/sessions/{sid}", dependencies=[Depends(require_admin)],
+               summary="删除会话及其消息（写操作，需管理员 JWT——NFR-219 边界）")
 def delete_session(sid: str):
     db = SessionLocal()
     try:

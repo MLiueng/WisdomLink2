@@ -48,9 +48,14 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
+import { useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
 import { http } from '../api/http'
+
+// 库上下文：从路由 query 取（KbDetailView「库设置」入口传入），缺省 1
+const route = useRoute()
+const kbId = Number(route.query.kb_id) || 1
 
 const TYPES = [
   { v: 'header', l: '页眉' }, { v: 'footer', l: '页脚' }, { v: 'watermark', l: '水印' },
@@ -62,15 +67,15 @@ const typeLabel = (t: string) => TYPES.find((x) => x.v === t)?.l || t
 const rules = ref<any[]>([])
 const loading = ref(false)
 const open = ref(false)
-const form = ref<any>({ kb_id: 1, rule_type: 'watermark', pattern: '', enabled: true, priority: 50 })
+const form = ref<any>({ kb_id: kbId, rule_type: 'watermark', pattern: '', enabled: true, priority: 50 })
 
 async function load() {
   loading.value = true
-  try { rules.value = (await (http as any).get('/admin/clean-rules', { params: { kb_id: 1 } })) as any[] } finally { loading.value = false }
+  try { rules.value = (await (http as any).get('/admin/clean-rules', { params: { kb_id: kbId } })) as any[] } finally { loading.value = false }
 }
 onMounted(load)
 
-function add() { form.value = { kb_id: 1, rule_type: 'watermark', pattern: '', enabled: true, priority: 50 }; open.value = true }
+function add() { form.value = { kb_id: kbId, rule_type: 'watermark', pattern: '', enabled: true, priority: 50 }; open.value = true }
 async function save() {
   await (http as any).post('/admin/clean-rules', form.value)
   ElMessage.success('已保存（审计已记录）')
@@ -78,7 +83,7 @@ async function save() {
   load()
 }
 async function patch(row: any) {
-  await (http as any).patch(`/admin/clean-rules/${row.id}`, { ...row, kb_id: 1 })
+  await (http as any).patch(`/admin/clean-rules/${row.id}`, { ...row, kb_id: kbId })
   ElMessage.success('已更新')
 }
 async function del(row: any) {

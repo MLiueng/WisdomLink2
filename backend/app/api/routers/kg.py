@@ -446,13 +446,13 @@ def coverage(kb_id: int):
 
 @router.get("/evidence/{chunk_id}", summary="关系证据原文（chunk 文本+所属文档）")
 def evidence(chunk_id: int):
-    from app.models import ChunkMeta, Document
+    from app.models import ChunkMeta, Document, DocVersion as _DV
     db = SessionLocal()
     try:
         c = db.get(ChunkMeta, chunk_id)
         if not c:
             raise HTTPException(404, "片段不存在")
-        doc = db.get(Document, (db.scalar(select(DocVersion.document_id).where(DocVersion.id == c.doc_version_id)) or 0))
+        doc = db.get(Document, (db.scalar(select(_DV.document_id).where(_DV.id == c.doc_version_id)) or 0))
     finally:
         db.close()
     return {"chunk_id": c.id, "text": c.text, "page": c.page, "heading": c.heading_path,

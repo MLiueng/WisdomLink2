@@ -81,7 +81,9 @@ const fmt = (v: number) => (v >= 1e6 ? (v / 1e6).toFixed(1) + 'M' : v >= 1e3 ? (
 onMounted(async () => {
   try {
     kbs.value = (await (http as any).get('/kb')) as any[]
-    sessions.value = (await (http as any).get('/chat/sessions')) as any[]
+    // /chat/sessions 已是分页结构 {items,total,has_more}；兼容 mock 模式的数组返回
+    const r = (await (http as any).get('/chat/sessions', { params: { page: 1, page_size: 5 } })) as any
+    sessions.value = Array.isArray(r) ? r : (r.items || [])
     overview.value = await (http as any).get('/admin/overview')
   } catch { /* 预览模式 */ }
   store.kbs = kbs.value

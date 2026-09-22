@@ -15,8 +15,9 @@
       <el-select v-model="currentKb" placeholder="选择知识库" style="width:180px" @change="page = 1; load()">
         <el-option v-for="k in kbs" :key="k.id" :label="k.name" :value="k.id" />
       </el-select>
-      <el-input v-model="q" placeholder="搜索标准问题" :prefix-icon="Search" clearable style="width:240px" />
-      <el-select v-model="statusFilter" placeholder="状态" clearable style="width:120px">
+      <el-input v-model="q" placeholder="搜索标准问题" :prefix-icon="Search" clearable style="width:240px"
+                @keyup.enter="page = 1; load()" @clear="page = 1; load()" />
+      <el-select v-model="statusFilter" placeholder="状态" clearable style="width:120px" @change="page = 1; load()">
         <el-option label="启用" value="enabled" /><el-option label="停用" value="disabled" />
       </el-select>
       <span class="spacer" />

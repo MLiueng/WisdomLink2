@@ -223,9 +223,11 @@ async function loadMoreSessions() {
 }
 
 async function pinSession(s: any) {
-  await (http as any).post(`/chat/sessions/${s.id}/pin`)
-  s.pinned = !s.pinned
-  sessions.value.sort((a: any, b: any) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0))
+  try {
+    await (http as any).post(`/chat/sessions/${s.id}/pin`)
+    s.pinned = !s.pinned
+    sessions.value.sort((a: any, b: any) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0))
+  } catch (e: any) { ElMessage.error(`置顶失败：${e.message}`) }
 }
 const render = (t: string) => renderMarkdown(t)
 
@@ -333,8 +335,9 @@ onMounted(async () => {
 })
 
 function delSession(s: any) {
-  http.delete(`/chat/sessions/${s.id}`).catch(() => {})
-  sessions.value = sessions.value.filter((x) => x.id !== s.id)
+  http.delete(`/chat/sessions/${s.id}`)
+    .then(() => { sessions.value = sessions.value.filter((x) => x.id !== s.id) })
+    .catch((e: any) => ElMessage.error(`删除失败：${e.message}`))   // 401 时 http 层已引导登录，这里兜底提示
 }
 
 function onEnter(e: KeyboardEvent) {

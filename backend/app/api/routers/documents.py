@@ -81,11 +81,21 @@ async def upload(kb_id: int = Form(...), folder_id: int | None = Form(None),
     suffix = Path(file.filename or "").suffix.lower()
     if suffix not in ALLOWED:
         raise HTTPException(400, f"不支持的文件类型 {suffix}")
-    data = await file.read()
-    # S-03：单文件大小上限（防内存/磁盘打爆），默认 100MB（WL2_UPLOAD_MAX_MB）
+    # S-03：单文件大小上限（防内存/磁盘打爆），默认 100MB（WL2_UPLOAD_MAX_MB）。
+    # 分块读取边读边计数：超限立即 413，不再先把整个文件读进内存后才校验
     max_mb = get_settings().upload_max_mb
-    if len(data) > max_mb * 1024 * 1024:
-        raise HTTPException(413, f"文件超过大小上限 {max_mb}MB")
+    max_bytes = max_mb * 1024 * 1024
+    chunks: list[bytes] = []
+    total = 0
+    while True:
+        chunk = await file.read(1024 * 1024)
+        if not chunk:
+            break
+        total += len(chunk)
+        if total > max_bytes:
+            raise HTTPException(413, f"文件超过大小上限 {max_mb}MB")
+        chunks.append(chunk)
+    data = b"".join(chunks)
     # S-03：二进制类型魔数与扩展名双重校验（文本类无固定魔数，跳过）
     magics = _MAGIC.get(suffix)
     if magics and not any(data.startswith(m) for m in magics):
@@ -100,7 +110,7 @@ async def upload(kb_id: int = Form(...), folder_id: int | None = Form(None),
             dup = db.scalar(select(Document).where(Document.kb_id == kb_id, Document.sha256 == digest))
         if dup and not new_version:  # BR-002
             raise HTTPException(409, {"message": "已存在相同内容的文档", "doc_id": dup.id, "title": dup.title})
-        key = f"kb/{kb_id}/{uuid.uuid4().hex}_{Path(file.filename).name}"
+        key = f"kb/{kb_id}/{uuid.uuid4().hex}_{Path(file.filename or 'unnamed').name}"
         get_object_store().put(key, data)
         if dup and new_version:
             from app.core.rules import next_version

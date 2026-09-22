@@ -16,7 +16,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { http } from '../api/http'
 
 const props = defineProps<{ kbIds: number[]; folderIds: number[] }>()
@@ -25,6 +25,11 @@ const kbs = computed({ get: () => props.kbIds, set: (v) => emit('update:kbIds', 
 const folders = computed({ get: () => props.folderIds, set: (v) => emit('update:folderIds', v) })
 const kbsList = ref<any[]>([])
 const folderList = ref<any[]>([])
+
+// 知识库下拉数据源（原缺失：kbsList 从未加载，下拉恒空、文件夹恒禁用）
+onMounted(async () => {
+  try { kbsList.value = (await (http as any).get('/kb')) as any[] } catch { /* mock */ }
+})
 
 watch(kbs, async (ids) => {
   emit('update:folderIds', [])
@@ -35,8 +40,6 @@ watch(kbs, async (ids) => {
     folderList.value = all.flat()
   } catch { /* mock */ }
 }, { immediate: true })
-
-if (!(http as any).constructor || true) { /* mock 数据在 http 层 */ }
 </script>
 
 <style scoped>

@@ -7,7 +7,7 @@
         <StatusBadge v-if="kbStatus" :status="kbStatus === 'archived' ? 'offline' : 'published'" />
       </div>
       <div>
-        <el-button :icon="Setting" @click="$router.push('/clean-rules')">库设置</el-button>
+        <el-button :icon="Setting" @click="$router.push({ path: '/clean-rules', query: { kb_id: kbId } })">库设置</el-button>
         <el-button type="primary" :icon="Upload" @click="uploadOpen = true">上传文档</el-button>
       </div>
     </div>

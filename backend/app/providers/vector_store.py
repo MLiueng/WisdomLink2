@@ -108,14 +108,15 @@ class QdrantStore(VectorStore):
         return out[:limit]
 
     async def search(self, collection, vector, top_k=20, flt=None):
-        from qdrant_client import models as m
         try:
-            hits = await self.cli.query_points(collection, query=vector, limit=top_k,
-                                               query_filter=_qdrant_filter(flt) if flt else None).then(lambda r: r.points)
+            # qdrant-client >= 1.10：query_points 返回 QueryResponse，命中在 .points
+            res = await self.cli.query_points(collection, query=vector, limit=top_k,
+                                              query_filter=_qdrant_filter(flt) if flt else None)
+            hits = res.points
         except AttributeError:
-            res = await self.cli.search(collection_name=collection, query_vector=vector, limit=top_k,
-                                        query_filter=_qdrant_filter(flt) if flt else None)
-            hits = res
+            # 旧版客户端无 query_points：回退 search（1.19 起该方法已删除，仅老版本会走到这里）
+            hits = await self.cli.search(collection_name=collection, query_vector=vector, limit=top_k,
+                                         query_filter=_qdrant_filter(flt) if flt else None)
         return [ChunkHit(chunk_id=str(h.id), text=(h.payload or {}).get("text", ""), score=float(h.score),
                          payload=h.payload or {}, source=(h.payload or {}).get("source", "dense"),
                          heading_path=(h.payload or {}).get("heading_path", ""),

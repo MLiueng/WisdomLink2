@@ -79,7 +79,10 @@ async def reindex_qa(kb_id: int, qa_ids: list[int] | None = None) -> int:
         else:
             await vs.drop_collection(f"qa_{kb_id}")
     except Exception:
-        pass  # 集合不存在等场景忽略，后续 upsert 会由驱动兜底建集合
+        # 集合不存在属预期（首次建库）；其余失败（网络/驱动）一旦吞掉，旧向量点会
+        # 残留污染双阈值判定（审计 H3）——必须留痕供排查，upsert 继续由驱动兜底
+        from app.core.logging_config import setup_logging
+        setup_logging().warning("QA 旧向量清理失败（kb=%s qa_ids=%s）", kb_id, qa_ids, exc_info=True)
     if ids:
         # B-04：嵌入缓存——问句文本稳定，重嵌时复用向量、只计量未命中部分
         from app.engine.embed_cache import embed_with_cache

@@ -20,7 +20,16 @@ http.interceptors.request.use((cfg) => {
 })
 http.interceptors.response.use(
   (r) => r.data,
-  (err) => Promise.reject(new Error(err?.response?.data?.detail?.message || err?.response?.data?.detail || err.message))
+  (err) => {
+    // 401 统一处理：清除失效 token 并引导重登（登录接口自身的 401=密码错误，除外）
+    const status = err?.response?.status
+    const url: string = err?.config?.url || ''
+    if (status === 401 && !url.includes('/admin/login')) {
+      localStorage.removeItem('wl2_token')
+      if (!location.pathname.startsWith('/login')) location.href = '/login'
+    }
+    return Promise.reject(new Error(err?.response?.data?.detail?.message || err?.response?.data?.detail || err.message))
+  }
 )
 
 /**

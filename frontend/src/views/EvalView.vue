@@ -76,7 +76,7 @@
               <el-col :span="12">
                 <div class="sec-title">路由档位分布（M2）</div>
                 <el-tag v-for="(n, tier) in (report.attribution.routing_tiers || {})" :key="tier"
-                        style="margin-right:8px" effect="light" :type="tier === 'deep' ? 'warning' : 'success'">
+                        style="margin-right:8px" effect="light" :type="String(tier) === 'deep' ? 'warning' : 'success'">
                   {{ tier }} × {{ n }}
                 </el-tag>
                 <div v-if="!Object.keys(report.attribution.routing_tiers || {}).length" class="muted">无路由记录</div>
@@ -182,7 +182,8 @@ const caseForm = ref<any>({ id: null, case_type: 'single_hop', question: '', exp
 
 const pct = (v: number | null | undefined) => v == null ? '—' : `${(v * 100).toFixed(1)}%`
 function attrPct(n: number) {
-  const total = Object.values(report.value?.attribution?.adopted_topk || {}).reduce((a: number, b: any) => a + Number(b), 0)
+  const total = Number(Object.values(report.value?.attribution?.adopted_topk || {})
+    .reduce<number>((a, b) => a + Number(b), 0))
   return total ? Math.round((n / total) * 100) : 0
 }
 

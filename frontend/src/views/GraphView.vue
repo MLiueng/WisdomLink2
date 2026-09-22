@@ -433,8 +433,13 @@ async function showEvidence(cid: number) {
 const entityOpen = ref(false)
 const entityDetail = ref<any>(null)
 const entityEdges = ref<any[]>([])
-function showEntity(row: any) {
+let edgesLoadedKb: number | null = null   // 边数据按库缓存，换库后重新加载
+async function showEntity(row: any) {
   entityDetail.value = row
+  if (!edgesAll.value.length || edgesLoadedKb !== kbId.value) {
+    await loadEdgesAll()
+    edgesLoadedKb = kbId.value
+  }
   entityEdges.value = edgesAll.value.filter((e: any) => e.src === row.name || e.dst === row.name)
   entityOpen.value = true
 }

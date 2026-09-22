@@ -91,8 +91,8 @@ class LocalOnnxRerank(RerankProvider):
         if LocalOnnxRerank._lock is None:
             LocalOnnxRerank._lock = threading.Lock()
         with LocalOnnxRerank._lock:   # 防止预热与请求并发双载模型（体验改造 ②）
-            if self._sess is not None:
-                return self._sess, self._tok
+            if LocalOnnxRerank._sess is not None:
+                return LocalOnnxRerank._sess, LocalOnnxRerank._tok
             if self._model_file is None:
                 from app.core.logging_config import setup_logging
                 setup_logging().error("本地重排模型未找到（%s），请检查 WL2_RERANK_LOCAL_PATH；本次检索跳过精排", self.root)
@@ -106,10 +106,10 @@ class LocalOnnxRerank(RerankProvider):
                       else ort.get_available_providers())
             so = ort.SessionOptions()
             so.intra_op_num_threads = 2
-            self._sess = ort.InferenceSession(str(self._model_file), so, providers=providers)
-            self._tok = AutoTokenizer.from_pretrained(str(self._tok_dir))
-            return self._sess, self._tok
-        return self._sess, self._tok
+            # 写到类属性：跨实例共享（配合 get_reranker 的实例缓存双保险）
+            LocalOnnxRerank._sess = ort.InferenceSession(str(self._model_file), so, providers=providers)
+            LocalOnnxRerank._tok = AutoTokenizer.from_pretrained(str(self._tok_dir))
+            return LocalOnnxRerank._sess, LocalOnnxRerank._tok
 
     def _score_sync(self, query: str, texts: list[str]) -> list[float]:
         sess, tok = self._load()
@@ -147,15 +147,30 @@ def _resolve_auto() -> str:
     return "local" if cfg.rerank_local_path else ("api" if cfg.rerank_remote_base_url else "none")
 
 
+_reranker_cache: dict[str, RerankProvider] = {}
+
+
 def get_reranker() -> RerankProvider:
+    """按配置缓存实例：本地 ONNX 模型加载秒级，每次检索新建实例会让精排退化成
+    逐请求重载（并发下在类锁上排队），必须复用。"""
     cfg = get_settings()
     mode = _resolve_auto() if cfg.rerank_active == "auto" else cfg.rerank_active
     if mode == "local" and cfg.rerank_local_path:
-        return LocalOnnxRerank(cfg.rerank_local_path, cfg.rerank_local_device, vendor=cfg.rerank_local_vendor)
+        key = f"local:{cfg.rerank_local_path}:{cfg.rerank_local_device}"
+        if key not in _reranker_cache:
+            _reranker_cache[key] = LocalOnnxRerank(cfg.rerank_local_path, cfg.rerank_local_device,
+                                                   vendor=cfg.rerank_local_vendor)
+        return _reranker_cache[key]
     if mode == "api" and cfg.rerank_remote_base_url:
-        return ApiRerank(cfg.rerank_remote_base_url, cfg.rerank_remote_api_key,
-                         cfg.rerank_remote_model, vendor=cfg.rerank_vendor)
+        key = f"api:{cfg.rerank_remote_base_url}:{cfg.rerank_remote_model}"
+        if key not in _reranker_cache:
+            _reranker_cache[key] = ApiRerank(cfg.rerank_remote_base_url, cfg.rerank_remote_api_key,
+                                             cfg.rerank_remote_model, vendor=cfg.rerank_vendor)
+        return _reranker_cache[key]
     if mode == "cohere" and cfg.rerank_remote_api_key:
-        return ApiRerank("https://api.cohere.com/v2", cfg.rerank_remote_api_key,
-                         "rerank-multilingual-v3.0", vendor=cfg.rerank_vendor or "Cohere")
+        key = "cohere"
+        if key not in _reranker_cache:
+            _reranker_cache[key] = ApiRerank("https://api.cohere.com/v2", cfg.rerank_remote_api_key,
+                                             "rerank-multilingual-v3.0", vendor=cfg.rerank_vendor or "Cohere")
+        return _reranker_cache[key]
     return RerankProvider()   # none / 配置不完整 → 跳过精排（降级，NFR-222）

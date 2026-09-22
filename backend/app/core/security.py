@@ -23,9 +23,15 @@ _WEAK_SECRETS = {
 }
 
 
+def secret_strength_ok(secret: str) -> bool:
+    """密钥强度判定：非空、非公开弱值/占位符、长度 >= 32。"""
+    return (bool(secret) and secret not in _WEAK_SECRETS
+            and not secret.startswith("change-me") and len(secret) >= 32)
+
+
 def _check_secret(secret: str) -> None:
-    """弱密钥拒绝：公开常量/过短密钥不允许签发令牌（S-01）。"""
-    if not secret or secret in _WEAK_SECRETS or len(secret) < 32:
+    """弱密钥拒绝：公开常量/占位符/过短密钥不允许签发令牌（S-01）。"""
+    if not secret_strength_ok(secret):
         raise HTTPException(500, "服务密钥强度不足，请配置随机且不少于 32 位的 WL2_SECRET 后重启")
 
 

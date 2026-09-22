@@ -63,7 +63,16 @@ const failed = computed(() => messages.value.filter((m) => m.degraded))
 const typeTag = (t: string) => (t === 'qa' ? 'success' : t === 'refusal' ? 'info' : 'primary')
 
 async function loadTasks() {
-  try { messages.value = (await (http as any).get('/chat/sessions/mock-session/messages')) as any[] } catch { /* */ }
+  // 任务中心：取最近 5 个会话的消息找失败/降级项（原硬编码 mock-session 恒 404）
+  try {
+    const r = (await (http as any).get('/chat/sessions', { params: { page: 1, page_size: 5 } })) as any
+    const sess = Array.isArray(r) ? r : (r.items || [])
+    const lists = await Promise.all(sess.map((s: any) =>
+      (http as any).get(`/chat/sessions/${s.id}/messages`, { params: { limit: 20 } })
+        .then((m: any) => (Array.isArray(m) ? m : (m.items || [])))
+        .catch(() => [])))
+    messages.value = lists.flat()
+  } catch { /* */ }
 }
 const page = ref(1)
 const size = ref(10)

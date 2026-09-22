@@ -146,8 +146,23 @@ def delete_folder(folder_id: int, move_to: int | None = None):
         folder = db.get(Folder, folder_id)
         if not folder:
             raise HTTPException(404, "文件夹不存在")
+
+        def _esc(s: str) -> str:   # 文件夹名可含 %/_，like 模式须转义
+            return s.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+
+        prefix = folder.path.rstrip("/") + "/" + folder.name + "/"
+        # move_to 目标校验：存在、同库、且不能是被删文件夹自身或其子级
+        # （否则文档挂到悬空/跨库文件夹，MySQL 下 FK 直接 500）
+        if move_to is not None:
+            target_f = db.get(Folder, move_to)
+            if not target_f:
+                raise HTTPException(404, "目标文件夹不存在")
+            if target_f.kb_id != folder.kb_id:
+                raise HTTPException(400, "目标文件夹不属于同一知识库")
+            if target_f.id == folder.id or target_f.path.startswith(prefix):
+                raise HTTPException(400, "目标文件夹不能是被删除文件夹自身或其子级")
         child_ids = db.scalars(select(Folder.id).where(
-            Folder.path.like(folder.path.rstrip("/") + "/" + folder.name + "/%"))).all()
+            Folder.path.like(_esc(prefix) + "%", escape="\\"))).all()
         target = move_to
         for fid in [*child_ids, folder_id]:
             if target is not None:
